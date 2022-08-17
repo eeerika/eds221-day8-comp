@@ -25,7 +25,7 @@ library(ggbeeswarm)
 library(gapminder)
 
 # Spatial
-#library(sf)
+library(sf)
 ```
 
 ## Read in the lizard data
@@ -95,5 +95,110 @@ ggplot(data = lizards, aes(x = total_length, y = weight)) +
        color = "Lizard species",
        shape = "Common name") +
   facet_wrap(~common_name, scales = "free")
+```
+
+## Part 2
+
+```{r}
+ggplot(data = lizards, aes(x = total_length, y = weight)) +
+  geom_point(aes(color = weight)) +
+  scale_color_gradientn(colors = 
+                          c("magenta", 
+                            "cyan4", 
+                            "darkorchid3", 
+                            "dodgerblue", 
+                            "green", 
+                            "yellow"))
+
+ggplot(data = lizards, aes(x = total_length, y = weight)) +
+  geom_point(aes(color = weight)) +
+  scale_color_steps(low = "red", high = "black")
+
+ggplot(data = lizards, aes(x = total_length, y = weight)) +
+  geom_point(aes(color = total_length)) +
+  scale_color_steps2(low = "purple", 
+                     mid = "white", 
+                     high = "orange",
+                     midpoint = 150,
+                     breaks = c(50, 75, 150, 180, 220, 280))
+
+ggplot(data = lizards, aes(x = total_length, y = weight)) +
+  geom_point(aes(color = total_length)) +
+  scale_color_stepsn(colors = c("orange", "red", "purple"),
+                     breaks = seq(from = 0,
+                                  to = 300,
+                                  by = 60))
+```
+
+Make a horizontal boxplot with common name on the y-axis, total length on the x-axis, with boxplot fill changing based on the common name
+
+```{r}
+lizards_median <- lizards %>%
+  mutate(common_name = fct_reorder(common_name, total_length, .fun = median))
+
+ggplot(data = lizards, aes(y = common_name, x = total_length)) +
+  geom_boxplot(aes(fill = common_name), show.legend = FALSE) +
+  scale_fill_paletteer_d(palette = "ggsci::default_gsea") +
+  theme_minimal()
+  #View(palettes_d_names)
+```
+
+```{r}
+ggplot(data = lizards, aes(x = total_length, y = weight)) +
+  geom_point(aes(color = weight)) +
+  theme(panel.grid = element_line(color = "red"),
+        panel.grid.minor.y = element_line(color = "green"),
+        axis.title.x = element_text(color = "purple"),
+        axis.text.y = element_text(color = "green"),
+        text = element_text(size = 18),
+        panel.background = element_rect(color = "purple", fill = "yellow")) +
+        annotate("text", x = 300, y = 50, label = "Wooooo", color = "blue") + 
+  geom_vline(xintercept = 250, linetype = "dashed", color = "orange", size = 4) #.major.x
+```
+
+```{r}
+wwc_lizards <- lizards %>% 
+  filter(common_name =="western whiptail", site == "sand")
+
+ggplot(data = wwc_lizards, aes(x = total_length, y = weight)) +
+  geom_point() +
+  geom_text_repel(aes(label = toe_num), size = 3, max.overlaps = 20, show.legend = FALSE) 
+```
+
+```{r}
+gapminder %>%
+  filter(year == 2002, continent == "Europe") %>% 
+  ggplot(aes(x = gdpPercap, y = lifeExp)) +
+  geom_point() + 
+  geom_text_repel(aes(label = country), size = 3)
+```
+
+```{r}
+ggplot(data = lizards, aes(x = total_length, y = weight)) +
+  geom_point() +
+  #gghighlight(toe_num == 250, label_key = toe_num) +
+  gghighlight(weight > 30, label_key = toe_num)
+```
+
+```{r}
+jornada_veg <- read_sf(here("data_raw","spatial_vegetation","doc.kml")) %>% dplyr::select(Name) %>% 
+  clean_names()
+
+ggplot() +
+  geom_sf(data = jornada_veg, 
+          aes(fill = name),
+          color = NA) +
+  theme_minimal() +
+  scale_fill_paletteer_d(palette = "ggthemes::manyeys") +
+  labs(x = "Longitude",
+       y = "Latitude",
+       fill = "Dominant vegetation:",
+       title = "Jornada Basin vegetation",
+       caption = "Data source: Jornada Basin LTER") +
+  theme(legend.position = "right",
+        plot.title.position = "plot",
+        plot.caption.position = "plot",
+        plot.caption = element_text(face = "italic", color = "gray30"),
+        axis.text = element_text(size = 5))
 ```
 
